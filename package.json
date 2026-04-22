@@ -1,0 +1,28 @@
+{
+  "name": "claude-agent-brain",
+  "version": "1.0.0",
+  "description": "Reference Mutiro bridge adapter built on the Claude Agent SDK.",
+  "scripts": {
+    "bridge": "tsx mutiro-claude-bridge.ts",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "mutiro",
+    "claude",
+    "agent-sdk",
+    "bridge",
+    "agent"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.9",
+    "yaml": "^2.8.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.0"
+  },
+  "type": "module"
+}
