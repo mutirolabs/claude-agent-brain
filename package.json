@@ -1,6 +1,6 @@
 {
   "name": "@mutirolabs/claude-agent-brain",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The Claude Code brain for Mutiro. Runs a Claude Agent SDK session per conversation, plugged into Mutiro's chatbridge contract.",
   "bin": {
     "mutiro-claude-brain": "dist/mutiro-claude-brain.mjs"
