@@ -4,6 +4,8 @@ The Mutiro bridge adapter built on the Claude Agent SDK.
 
 Claude Code handles the cognition. Mutiro handles the messaging surface, identity, and state.
 
+![Mutiro UI](docs/assets/mutiro-claude-ui.png)
+
 ## Why this exists
 
 Sovereign intelligence deserves a professional interface. Hiding a powerful Claude agent behind a generic Telegram bot or a clunky webview breaks the user experience and obscures ownership. This bridge connects the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) to Mutiro's native clients (Desktop, Mobile, Web, CLI), enforcing the `by @owner` accountability standard out of the box.
