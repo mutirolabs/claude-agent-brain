@@ -681,29 +681,14 @@ const createMutiroMcpServer = (deps: {
   });
 };
 
-const MUTIRO_TOOL_ALLOWLIST = [
-  "mcp__mutiro__send_message",
-  "mcp__mutiro__send_voice_message",
-  "mcp__mutiro__send_card",
-  "mcp__mutiro__react_to_message",
-  "mcp__mutiro__send_file_message",
-  "mcp__mutiro__forward_message",
-  "mcp__mutiro__recall",
-  "mcp__mutiro__recall_get",
-];
-
-const SYSTEM_PROMPT_APPEND = `
-You are a Mutiro agent running on top of the Claude Agent SDK. Every turn begins with a [message_context] header that includes the conversation_id, message_id, and sender.
-
-Response conventions:
-- Your plain-text assistant reply is automatically sent back to the user as a Mutiro message at the end of the turn.
-- Use the mcp__mutiro__send_message tool when you need to send additional or targeted messages mid-turn (rarely needed).
-- Use mcp__mutiro__react_to_message, mcp__mutiro__send_voice_message, mcp__mutiro__send_card, mcp__mutiro__send_file_message, mcp__mutiro__forward_message, mcp__mutiro__recall, and mcp__mutiro__recall_get for their named purposes.
-- Reply "NOOP" if there is nothing useful to send.
-- You have full access to Claude Code's built-in tools (Bash, Read, Edit, Grep, WebFetch, ...). Your working directory is the Mutiro agent directory — treat it as the agent's persistent workspace.
+// Bridge-invariant instructions the LLM must understand regardless of what
+// the user puts in CLAUDE.md. Keep these to the *protocol contract* only —
+// personality, role, and tool preferences belong in the user's CLAUDE.md.
+const BRIDGE_INVARIANTS = `
+You are running as a Mutiro agent. Each user turn begins with a \`[message_context]\` header identifying the sender, conversation_id, and message_id. Your plain-text response is automatically sent to the user as a Mutiro message when the turn ends — reply "NOOP" to skip sending.
 `.trim();
 
-const readAllowedDirs = (agentDir: string): string[] => {
+const readMutiroAllowedDirs = (agentDir: string): string[] => {
   const configPath = path.join(agentDir, ".mutiro-agent.yaml");
   try {
     const raw = fs.readFileSync(configPath, "utf8");
@@ -712,13 +697,58 @@ const readAllowedDirs = (agentDir: string): string[] => {
     if (!Array.isArray(dirs)) return [];
     return dirs
       .filter((d): d is string => typeof d === "string" && d.trim().length > 0)
-      .map((d) => path.resolve(d));
+      .map((d) => path.resolve(agentDir, d));
   } catch (err: any) {
     if (err?.code !== "ENOENT") {
       console.error(`[Bridge] Failed to read allowed_dirs from ${configPath}:`, err?.message || err);
     }
     return [];
   }
+};
+
+// Read additionalDirectories from the user's Claude Code settings so Mutiro's
+// allowed_dirs are *additive*, never replacing what the user already configured
+// the standard way. Checks both settings.json and settings.local.json, and
+// both top-level and permissions.additionalDirectories shapes.
+const readClaudeAdditionalDirs = (agentDir: string): string[] => {
+  const candidates = [
+    path.join(agentDir, ".claude", "settings.json"),
+    path.join(agentDir, ".claude", "settings.local.json"),
+  ];
+  const dirs: string[] = [];
+  for (const settingsPath of candidates) {
+    try {
+      const raw = fs.readFileSync(settingsPath, "utf8");
+      const parsed = JSON.parse(raw) as any;
+      const extracted = parsed?.additionalDirectories ?? parsed?.permissions?.additionalDirectories;
+      if (Array.isArray(extracted)) {
+        for (const d of extracted) {
+          if (typeof d === "string" && d.trim().length > 0) {
+            dirs.push(path.resolve(agentDir, d));
+          }
+        }
+      }
+    } catch (err: any) {
+      if (err?.code !== "ENOENT") {
+        console.error(`[Bridge] Failed to read ${settingsPath}:`, err?.message || err);
+      }
+    }
+  }
+  return dirs;
+};
+
+const unionDirs = (...lists: string[][]): string[] => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) {
+    for (const dir of list) {
+      if (!seen.has(dir)) {
+        seen.add(dir);
+        out.push(dir);
+      }
+    }
+  }
+  return out;
 };
 
 const createSessionStore = (deps: {
@@ -775,12 +805,11 @@ const createSessionStore = (deps: {
         mcpServers: {
           mutiro: mcpServer,
         },
-        allowedTools: MUTIRO_TOOL_ALLOWLIST,
         permissionMode: "bypassPermissions",
         systemPrompt: {
           type: "preset",
           preset: "claude_code",
-          append: SYSTEM_PROMPT_APPEND,
+          append: BRIDGE_INVARIANTS,
         },
         ...(state.claudeSessionId ? { resume: state.claudeSessionId } : {}),
       },
@@ -909,9 +938,11 @@ async function main() {
     });
   };
 
-  const additionalDirectories = readAllowedDirs(targetDir);
+  const mutiroAllowedDirs = readMutiroAllowedDirs(targetDir);
+  const claudeAdditionalDirs = readClaudeAdditionalDirs(targetDir);
+  const additionalDirectories = unionDirs(claudeAdditionalDirs, mutiroAllowedDirs);
   if (additionalDirectories.length > 0) {
-    console.log(`[Bridge] Extending Claude sandbox with ${additionalDirectories.length} allowed_dirs: ${additionalDirectories.join(", ")}`);
+    console.log(`[Bridge] Additional sandbox directories (${additionalDirectories.length}): ${additionalDirectories.join(", ")}`);
   }
 
   const sessionStore = createSessionStore({

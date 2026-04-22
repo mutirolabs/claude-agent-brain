@@ -1,19 +1,48 @@
 {
-  "name": "claude-agent-brain",
-  "version": "1.0.0",
-  "description": "Reference Mutiro bridge adapter built on the Claude Agent SDK.",
+  "name": "@mutirolabs/claude-agent-brain",
+  "version": "0.1.0",
+  "description": "The Claude Code brain for Mutiro. Runs a Claude Agent SDK session per conversation, plugged into Mutiro's chatbridge contract.",
+  "bin": {
+    "mutiro-claude-brain": "dist/mutiro-claude-brain.mjs"
+  },
+  "main": "dist/mutiro-claude-brain.mjs",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mutirolabs/claude-agent-brain.git"
+  },
+  "homepage": "https://github.com/mutirolabs/claude-agent-brain#readme",
+  "bugs": {
+    "url": "https://github.com/mutirolabs/claude-agent-brain/issues"
+  },
   "scripts": {
-    "bridge": "tsx mutiro-claude-bridge.ts",
-    "check": "tsc -p tsconfig.json --noEmit"
+    "build": "esbuild mutiro-claude-bridge.ts --bundle --platform=node --target=node20 --format=esm --packages=external --outfile=dist/mutiro-claude-brain.mjs --banner:js=\"#!/usr/bin/env node\" && chmod +x dist/mutiro-claude-brain.mjs",
+    "start": "tsx mutiro-claude-bridge.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run check && npm run build"
   },
   "keywords": [
     "mutiro",
     "claude",
+    "claude-code",
     "agent-sdk",
-    "bridge",
-    "agent"
+    "chatbridge",
+    "agent",
+    "messaging",
+    "llm"
   ],
   "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.1.9",
     "yaml": "^2.8.3",
@@ -21,8 +50,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "esbuild": "^0.28.0",
     "tsx": "^4.21.0",
     "typescript": "^5.6.0"
-  },
-  "type": "module"
+  }
 }
