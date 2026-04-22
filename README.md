@@ -12,14 +12,17 @@ Claude Code handles the cognition. Mutiro handles the envelope: identity, allowl
 
 ## Install
 
-```bash
-npm install -g @mutirolabs/claude-agent-brain
-```
-
-Or run without installing:
+Run it directly with npx (no install, always latest):
 
 ```bash
 npx @mutirolabs/claude-agent-brain /path/to/your/agent
+```
+
+Or install globally if you'll run it often:
+
+```bash
+npm install -g @mutirolabs/claude-agent-brain
+mutiro-claude-brain /path/to/your/agent
 ```
 
 You'll need Node 20+ and your `ANTHROPIC_API_KEY` set (Bedrock and Vertex are also supported via their respective env vars — the standard Claude SDK auth).
