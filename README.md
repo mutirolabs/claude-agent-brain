@@ -86,6 +86,20 @@ This matters here more than anywhere else. Because Claude Code runs headlessly (
 
 ## FAQ
 
+**How do I show the Claude badge on my agent?**
+
+Pass `--badge claude` when creating the agent so every Mutiro client renders the Anthropic spark next to the avatar:
+
+```bash
+mutiro agents create <username> "<Display>" --engine genie --badge claude
+```
+
+For an agent that already exists, flip the badge on with:
+
+```bash
+mutiro agents update-profile <agent-username> --badge claude
+```
+
 **How does this compare to the built-in Claude engine?**
 
 The built-in Claude engine talks to the Anthropic API directly. This bridge runs a full Claude Code session per turn — so your agent inherits Claude Code's filesystem tools, shell, MCP servers, skills, and subagents. Use this bridge when you want Claude's coding-agent superpowers inside a Mutiro persona.
@@ -102,7 +116,7 @@ Whatever Claude Code uses by default. To pin a specific model, pass `model: "cla
 
 Paste this prompt into your AI assistant (Claude, Cursor, Windsurf, …):
 
-> Read https://mutiro.com/docs/guides/create-agent and help me create a Mutiro agent step by step.
+> Read https://mutiro.com/docs/guides/create-agent and help me create a Mutiro agent step by step. Use `--badge claude` on `mutiro agents create` so the agent shows the Claude badge.
 
 Or follow the [Mutiro create-agent guide](https://www.mutiro.com/docs/guides/create-agent) by hand.
 
